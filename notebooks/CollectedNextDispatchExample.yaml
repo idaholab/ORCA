@@ -1,0 +1,56 @@
+dt: 5.0 # required input
+optimization: # specifies all required parameters for ORCA.Optimization objects
+  control: # specifies control u information
+    lb: # lower bound for control u in order given by "order"
+    - 0.0
+    - 0.0
+    order: # names of the control u components
+    - qC
+    - qD
+    ub: # upper bound for control u in order given by "order"
+    - 20.0
+    - 20.0
+  matrices: ../tests/data/ABC.pkl
+  measurements: # specifies measurements y information
+    lb: # lower bound for measurements y in order given by "order"
+    - 0.0
+    order: # names of measuremetns y components
+    - SOC2
+    ub: # upper bound for measurements y in order given by "order"
+    - 20.0
+  objective:
+    # the objective function is defined as:
+    # sum(price*(sum(control_multiplier*control) + 
+    #            sum(measurement_multiplier*measurement) + 
+    #            sum(state_multiplier*state)))
+    # each of the multipliers are given in the same order as the states/control/measurements
+    price: 
+    # this is the name of the reward/price multiple entries may be specified with unique
+    # names and must include the multiplier information below for each reward/price
+      control_multiplier: # multiplies the control in order given by control "order" for objective function under reward/price name above
+      - -1.0
+      - 1.0
+      measurement_multiplier: # multiplies the measurements in order given by measurements "order" for objective function under reward/price name above
+      - 0.0
+      state_multiplier: # multiplies the states in order given by states "order" for objective function under reward/price name above
+      - 1.0
+      - 0.0
+    sense: maximize # specify "maximize" or "minimize" for the objective function
+  solver: glpk # pyomo solver
+  states: # specifies states x information
+    lb: # lower bound for states x in order given by "order"
+    - 0.0
+    - 0.0
+    order: # names of the states x components
+    - qNPP
+    - SOC
+    ub: # upper bound for states x in order given by "order"
+    - 50.0
+    - 20.0
+  type: LTIStateSpaceMPCPyomoOptimization # specify the ORCA.Optimization object to use
+reward: # specifies all required parameters for ORCA.RewardForecast objects
+  price: # this is the user-specified name of the reward/price 
+    history: ../tests/data/storage_data.csv # name of the historical data file to use
+    name: LMP # name of column with reward/price information
+    type: StaticHistoricalForecast # specify the ORCA.RewardForecast object to use
+t_window: 720.0 # required input

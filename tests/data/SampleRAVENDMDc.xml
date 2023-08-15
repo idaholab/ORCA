@@ -1,0 +1,92 @@
+<?xml version="1.0"?>
+<Simulation>
+
+    <TestInfo>
+        <name>SampleRAVENDMDc</name>
+        <author>dgarrett622</author>
+        <created>2022-11-08</created>
+        <classesTested>ROM.SupervisedLearning.DynamicModeDecompositionControl</classesTested>
+        <description>
+            This RAVEN input file creates a DMDc ROM of a simulated battery storage 
+            model and saves the metadata to an XML.
+        </description>
+    </TestInfo>
+
+    <RunInfo>
+        <WorkingDir>./</WorkingDir>
+        <Sequence>
+            load,
+            DMDCTrain,
+            stats,
+            writeOut
+        </Sequence>
+        <batchSize>4</batchSize>
+    </RunInfo>
+
+    <Steps>
+        <IOStep name="load">
+            <Input class="Files" type="">RAVENstorage_data</Input>
+            <Output class="DataObjects" type="HistorySet">TrainData</Output>
+        </IOStep>
+        <RomTrainer name="DMDCTrain">
+            <Input class="DataObjects" type="HistorySet">TrainData</Input>
+            <Output class="Models" type="ROM">DMDcrom</Output>
+        </RomTrainer>
+        <IOStep name="stats">
+            <Input class="Models" type="ROM">DMDcrom</Input>
+            <Output class="DataObjects" type="DataSet">rom_stats</Output>
+        </IOStep>
+        <IOStep name="writeOut" pauseAtEnd="True">
+            <Input class="DataObjects" type="DataSet">rom_stats</Input>
+            <Output class="OutStreams" type="Print">RAVENDMDc</Output>
+        </IOStep>
+    </Steps>
+
+    <Files>
+        <Input name="RAVENstorage_data" type="">RAVENstorage_data.csv</Input>
+    </Files>
+
+    <Models>
+        <ROM name="DMDcrom" subType="DMDC">
+            <!-- Target contains Time, StateVariable Names (x) and OutputVariable Names (y) in training data -->
+            <Target>Time,qNPP,SOC,SOC2</Target>
+            <!-- Actuator Variable Names (u) -->
+            <actuators>qC,qD</actuators>
+            <!-- State Variable Names -->
+            <stateVariables>qNPP,SOC</stateVariables>
+            <!-- Pivot variable -->
+            <pivotParameter>Time</pivotParameter>
+            <!-- rankSVD: -1 = No truncation, 0 = optimized truncation, positive integer = truncation level -->
+            <rankSVD>-1</rankSVD>
+            <!-- SubtractNormUXY: True will subtract the initial values from U, X, Y -->
+            <subtractNormUXY>False</subtractNormUXY>
+            <!-- Features are the variable names for predictions: Actuators "u" and initial states-->
+            <Features>qC,qD,qNPP_0,SOC_0</Features>
+            <!-- Initialization Variables -->
+            <initStateVariables>qNPP_0,SOC_0</initStateVariables>
+        </ROM>
+    </Models>
+
+    <DataObjects>
+        <HistorySet name="TrainData">
+            <Input>qNPP_0,SOC_0</Input>
+            <Output>qNPP,qD,qC,SOC,SOC2,Time</Output>
+            <options>
+                <pivotParameter>Time</pivotParameter>
+            </options>
+        </HistorySet>
+        <DataSet name="rom_stats"/>
+    </DataObjects>
+
+    <OutStreams>
+        <Print name="RAVENDMDc">
+            <type>csv</type>
+            <source>rom_stats</source>
+        </Print>
+        <Print name="train">
+            <type>csv</type>
+            <source>TrainData</source>
+        </Print>
+    </OutStreams>
+
+</Simulation>

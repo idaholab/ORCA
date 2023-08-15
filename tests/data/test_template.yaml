@@ -1,0 +1,49 @@
+dt: 5.0
+optimization:
+  control:
+    lb:
+    - 0.0
+    - 0.0
+    order:
+    - qC
+    - qD
+    ub:
+    - 20.0
+    - 20.0
+  matrices: ABC.pkl
+  measurements:
+    lb:
+    - 0.0
+    order:
+    - SOC2
+    ub:
+    - 20.0
+  objective:
+    price:
+      control_multiplier:
+      - -1.0
+      - 1.0
+      measurement_multiplier:
+      - 0.0
+      state_multiplier:
+      - 1.0
+      - 0.0
+    sense: maximize
+  solver: cbc
+  states:
+    lb:
+    - 0.0
+    - 0.0
+    order:
+    - qNPP
+    - SOC
+    ub:
+    - 50.0
+    - 20.0
+  type: LTIStateSpaceMPCPyomoOptimization
+reward:
+  price:
+    history: ../rt_fivemin_hrl_lmps.csv
+    name: total_lmp_rt
+    type: StaticHistoricalForecast
+t_window: 720.0
