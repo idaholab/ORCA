@@ -1,3 +1,5 @@
+# Copyright 2023, Battelle Energy Alliance, LLC,  ALL RIGHTS RESERVED
+
 import os
 import pickle
 import xml.etree.ElementTree as ET
@@ -20,6 +22,8 @@ class LTIStateSpaceMPCPyomoOptimization(Optimization):
     ----------
     solver : str
         name of solver for Pyomo to use
+    executable : str
+        user defined solver directory for Pyomo to use
     matrices : str
         path to file containing A, B, C matrices
     t_window : float
@@ -87,11 +91,11 @@ class LTIStateSpaceMPCPyomoOptimization(Optimization):
 
     """
 
-    def __init__(self, solver="cbc", matrices=None, **specs):
+    def __init__(self, solver="cbc", matrices=None, executable='.',**specs):
         super().__init__(**specs)
 
         # set solver for optimization (rely on Pyomo for error handling)
-        self.solver = pyo.SolverFactory(solver)
+        self.solver = pyo.SolverFactory(solver, executable=executable)
 
         # read in A, B, C matrices from file
         assert os.path.isfile(
@@ -493,13 +497,16 @@ class LTIStateSpaceMPCPyomoOptimization(Optimization):
         _ = self.solve_model(rewards, x_init)
 
         # return values of states, control, measurements
-        result = {"states": [], "control": [], "measurements": []}
+        # plus prediction and rewards
+        result = {"states": [], "control": [], "measurements": [],"prediction":[], 'rewards':[]}
         # states
         for i in self.model.xi:
             result["states"].append(pyo.value(self.model.x[i, 1]))
+            result["prediction"].append(pyo.value(self.model.x[i, :])) # add predicted states
         # control
         for i in self.model.ui:
             result["control"].append(pyo.value(self.model.u[i, 1]))
+            result["prediction"].append(pyo.value(self.model.u[i, :])) # add predicted control
         # measurements
         if self.measurements is not None:
             for i in self.model.yi:
